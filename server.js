@@ -13,17 +13,18 @@ mongoose.connect('mongodb+srv://agarci9:Castellet25@cluster0.gc1mk.mongodb.net/?
   .catch(err => console.log('Error connecting to MongoDB:', err));
 
 // Definició del model de dades (un exemple simple d'un model de "Usuari")
-const userSchema = new mongoose.Schema({
-  name: String,
-  email: String
+const albumsSchema = new mongoose.Schema({
+  artist: String,
+  title: String,
+  date: String
 });
 
-const User = mongoose.model('User', userSchema);
+const Albums = mongoose.model('albums', albumsSchema);
 app.get('/', (req, res) => {
   res.send('Hello World 22222!');
 });
 
-app.post('/users', async (req, res) => {
+app.post('/albums', async (req, res) => {
   /// res.status(200).json(req.body);
   // Check if request body is empty and fill with default values
   if (!req.body.name || !req.body.email) {
@@ -41,12 +42,12 @@ app.post('/users', async (req, res) => {
 });
 
 // Ruta per obtenir tots els usuaris
-app.get('/users', async (req, res) => {
+app.get('/albums', async (req, res) => {
   try {
-    const users = await User.find();
-    res.status(200).json(users);
+    const albums = await Albums.find();
+    res.status(200).json(albums);
   } catch (err) {
-    res.status(500).json({ message: 'Error fetching users', error: err.message });
+    res.status(500).json({ message: 'Error fetching albums', error: err.message });
   }
 });
 
