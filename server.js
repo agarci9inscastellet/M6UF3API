@@ -1,44 +1,85 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
-const port = process.env.PORT || 3031;
+const port = process.env.PORT || 3021;
 // Middleware per parsejar el cos de les sol·licituds a JSON
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-
+//app.use(express.json());
+//app.use(express.urlencoded({ extended: true }));
 // Connecta't a MongoDB (modifica l'URI amb la teva pròpia cadena de connexió)
-mongoose.connect('mongodb+srv://agarci9:Castellet25@cluster0.gc1mk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
+
+//const uri = "mongodb+srv://agarci9:xxxx@cluster0.gc1mk.mongodb.net/albums?appName=Cluster0";
+const uri = process.env.MONGO_URI;
+console.log("URI: ", uri);
+
+//const clientOptions = { serverApi: { version: '1', strict: true, deprecationErrors: true },  useNewUrlParser: true, useUnifiedTopology: true };
+const clientOptions = { };
+
+mongoose.connect(uri, clientOptions)
+  .then(() => console.log('Connected to MongoDB: albums'))
   .catch(err => console.log('Error connecting to MongoDB:', err));
 
 // Definició del model de dades (un exemple simple d'un model de "Usuari")
 const albumsSchema = new mongoose.Schema({
-  artist: String,
-  title: String,
-  date: String
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": [
+      "_id",
+      "artist",
+      "date",
+      "title"
+    ],
+    "properties": {
+      "_id": {
+        "bsonType": "objectId"
+      },
+      "artist": {
+        "bsonType": "string"
+      },
+      "date": {
+        "bsonType": "date"
+      },
+      "title": {
+        "bsonType": "string"
+      }
+    }
+  }
 });
 
-const Albums = mongoose.model('albums', albumsSchema);
+const Albums = mongoose.model('albums', albumsSchema, 'albums');
+
+
+/******************************************************** */
+/******************************************************** */
+/******************************************************** */
+/******************************************************** */
+/******************************************************** */
+/**
+ * END POINTS
+ */
+
+// Ruta a l'arrel
 app.get('/', (req, res) => {
-  res.send('Hello World 22222!');
+  res.send('Yout API is running!');
 });
 
-app.post('/albums', async (req, res) => {
-  /// res.status(200).json(req.body);
-  // Check if request body is empty and fill with default values
-  if (!req.body.name || !req.body.email) {
-    req.body.name = req.body.name || "err";
-    req.body.email = req.body.email || "err";
-  }
-
-  try {
-    const user = new User({ name: req.body.name, email: req.body.email });
-    await user.save();
-    res.status(201).json(user);
-  } catch (err) {
-    res.status(400).json({ message: 'Error creating user', error: err.message });
-  }
+// Ruta per obtenir albums entre dates
+app.get('/filterdates/:dataini/:datafi', async (req, res) => {
+    try {
+      const { dataini, datafi } = req.params;
+      console.log("ENTRE DATES: ",dataini, datafi);
+      const albums = await Albums.find({
+        date: { $gte: dataini, $lte: datafi }
+      });
+  
+      if (albums.length === 0) {
+        return res.status(404).json({ message: 'No album found in this date range' });
+      }
+  
+      res.status(200).json(albums);
+    } catch (err) {
+      res.status(500).json({ message: 'Error fetching album', error: err.message });
+    }
 });
 
 // Ruta per obtenir tots els usuaris
@@ -46,56 +87,19 @@ app.get('/albums', async (req, res) => {
   try {
     const albums = await Albums.find();
     res.status(200).json(albums);
+    console.log("working");
   } catch (err) {
     res.status(500).json({ message: 'Error fetching albums', error: err.message });
   }
 });
 
-// Ruta per obtenir un usuari per ID
-app.get('/users/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.status(200).json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching user', error: err.message });
-  }
-});
-
-// Ruta per actualitzar un usuari per ID
-app.put('/users/:id', async (req, res) => {
-  const { id } = req.params;
-  const { name, email } = req.body;
-  try {
-    const user = await User.findByIdAndUpdate(id, { name, email }, { new: true });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.status(200).json(user);
-  } catch (err) {
-    res.status(400).json({ message: 'Error updating user', error: err.message });
-  }
-});
-
-// Ruta per eliminar un usuari per ID
-app.delete('/users/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const user = await User.findByIdAndDelete(id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.status(200).json({ message: 'User deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: 'Error deleting user', error: err.message });
-  }
-});
-
+/******************************************************** */
+/******************************************************** */
+/******************************************************** */
+/******************************************************** */
+/******************************************************** */
 // changed
 // Inicia el servidor
-app.listen(port, () => {
+app.listen(port,  '0.0.0.0', () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
