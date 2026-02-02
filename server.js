@@ -8,7 +8,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // Connecta't a MongoDB (modifica l'URI amb la teva pròpia cadena de connexió)
-mongoose.connect('mongodb+srv://agarci9:Castellet25@cluster0.gc1mk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb+srv://agarci9:Castellet26@cluster0.gc1mk.mongodb.net/tasques?appName=Cluster0', { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.log('Error connecting to MongoDB:', err));
 
@@ -64,34 +64,35 @@ app.get('/users/:id', async (req, res) => {
   }
 });
 
-// Ruta per actualitzar un usuari per ID
-app.put('/users/:id', async (req, res) => {
-  const { id } = req.params;
-  const { name, email } = req.body;
-  try {
-    const user = await User.findByIdAndUpdate(id, { name, email }, { new: true });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.status(200).json(user);
-  } catch (err) {
-    res.status(400).json({ message: 'Error updating user', error: err.message });
-  }
+app.post('/provapost/', (req, res) => {
+    const { artist, title, date } = req.body;
+    console.log("UPDATING ALBUM: ",req.body, artist);
+    res.json({ 
+        message: 'User created',
+        data: req.body 
+    });
 });
 
-// Ruta per eliminar un usuari per ID
-app.delete('/users/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const user = await User.findByIdAndDelete(id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.status(200).json({ message: 'User deleted successfully' });
-  } catch (err) {
-    res.status(500).json({ message: 'Error deleting user', error: err.message });
+app.delete('/albums/', async (req, res) => {
+  try{
+    const { artist, title, date } = req.body;
+    const result = await Albums.deleteOne({ title: req.body.title });
+
+    console.log("DELETING ALBUM: ",req.body);
+    res.json({ 
+      message: 'User DELETED',
+      data: req.body 
+    });
+  }catch (err) {
+      res.status(500).json({ message: 'Error fetching albums', error: err.message });
+
   }
+
 });
+
+
+
+
 
 // changed
 // Inicia el servidor
