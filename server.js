@@ -2,10 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const app = express();
-const port = process.env.PORT || 3021;
+const port = process.env.PORT || 3022;
 // Middleware per parsejar el cos de les sol·licituds a JSON
-//app.use(express.json());
-//app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 // Connecta't a MongoDB (modifica l'URI amb la teva pròpia cadena de connexió)
 
 //const uri = "mongodb+srv://agarci9:xxxx@cluster0.gc1mk.mongodb.net/albums?appName=Cluster0";
@@ -21,30 +21,10 @@ mongoose.connect(uri, clientOptions)
 
 // Definició del model de dades (un exemple simple d'un model de "Usuari")
 const albumsSchema = new mongoose.Schema({
-  "$jsonSchema": {
-    "bsonType": "object",
-    "required": [
-      "_id",
-      "artist",
-      "date",
-      "title"
-    ],
-    "properties": {
-      "_id": {
-        "bsonType": "objectId"
-      },
-      "artist": {
-        "bsonType": "string"
-      },
-      "date": {
-        "bsonType": "date"
-      },
-      "title": {
-        "bsonType": "string"
-      }
-    }
-  }
-});
+  title: { type: String, required: true },
+  artist: { type: String, required: true },
+  date: { type: String, required: true }
+},{ versionKey: false });
 
 const Albums = mongoose.model('albums', albumsSchema, 'albums');
 
@@ -60,6 +40,7 @@ const Albums = mongoose.model('albums', albumsSchema, 'albums');
 
 // Ruta a l'arrel
 app.get('/', (req, res) => {
+
   res.send('Yout API is running!');
 });
 
@@ -93,6 +74,41 @@ app.get('/albums', async (req, res) => {
   }
 });
 
+app.post('/add_album', async (req, res) => {
+  try {
+    const { artist, title, date } = req.body;
+    console.log("CREATING ALBUM...: ",req.body, title, artist, date);
+    // Create a new album document
+    const album = new Albums({ title, artist, date });
+
+    // Save to MongoDB
+    const savedAlbum = await album.save();
+
+    res.status(201).json({ message: 'Album added successfully', album: savedAlbum });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Error adding album', error });
+  }
+});
+
+
+
+app.delete('/delete_album/', async (req, res) => {
+  try{
+    const { _id } = req.body;
+    const result = await Albums.deleteOne({ _id: req.body._id });
+
+    console.log("DELETING ALBUM: ",req.body);
+    res.json({ 
+      message: 'User DELETED',
+      data: req.body 
+    });
+  }catch (err) {
+      res.status(500).json({ message: 'Error fetching albums', error: err.message });
+
+  }
+
+});
 /******************************************************** */
 /******************************************************** */
 /******************************************************** */
