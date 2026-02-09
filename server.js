@@ -41,7 +41,7 @@ const Albums = mongoose.model('albums', albumsSchema, 'albums');
 // Ruta a l'arrel
 app.get('/', (req, res) => {
 
-  res.send('Yout API is running!');
+  res.send('Yout API is running - ARA!');
 });
 
 // Ruta per obtenir albums entre dates
